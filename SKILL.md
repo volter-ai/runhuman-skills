@@ -54,17 +54,17 @@ Runhuman is a human QA testing API. Instead of writing automated tests, you desc
 
 ```bash
 # Install CLI globally
-npm install -g @runhuman/cli
+npm install -g runhuman
 
 # Or use npx (no installation)
-npx @runhuman/cli test <url>
+npx runhuman test <url>
 ```
 
 ### Quick Start
 
 **Simplest possible test:**
 ```bash
-npx @runhuman/cli test https://example.com
+npx runhuman test https://example.com
 ```
 
 This sends your site to a human tester with default instructions: "Explore the site and report any issues."
@@ -74,7 +74,7 @@ This sends your site to a human tester with default instructions: "Explore the s
 #### 1. Test with Custom Description
 
 ```bash
-npx @runhuman/cli test https://example.com \
+npx runhuman test https://example.com \
   --description "Test the checkout flow: add item to cart, proceed to checkout, fill in shipping info. Check for bugs and UX issues."
 ```
 
@@ -87,7 +87,7 @@ npx @runhuman/cli test https://example.com \
 
 ```bash
 # Block until test completes (useful in CI/CD)
-npx @runhuman/cli test https://example.com \
+npx runhuman test https://example.com \
   --description "Test signup form" \
   --wait
 ```
@@ -101,7 +101,7 @@ npx @runhuman/cli test https://example.com \
 
 ```bash
 # Set custom timeout (default: 5 minutes)
-npx @runhuman/cli test https://example.com \
+npx runhuman test https://example.com \
   --timeout 300000 \  # 5 minutes in milliseconds
   --description "Full e-commerce flow"
 ```
@@ -110,10 +110,10 @@ npx @runhuman/cli test https://example.com \
 
 ```bash
 # Get status of a specific job
-npx @runhuman/cli status <job-id>
+npx runhuman status <job-id>
 
 # List all recent tests
-npx @runhuman/cli list
+npx runhuman list
 ```
 
 ### Common CLI Workflows
@@ -126,7 +126,7 @@ npx @runhuman/cli list
 
 echo "Testing staging site before deployment..."
 
-npx @runhuman/cli test https://staging.myapp.com \
+npx runhuman test https://staging.myapp.com \
   --description "Test user signup: click 'Sign Up', fill form, verify email sent" \
   --wait
 
@@ -143,7 +143,7 @@ fi
 
 ```bash
 # Test on mobile viewport
-npx @runhuman/cli test https://myapp.com \
+npx runhuman test https://myapp.com \
   --description "Test on mobile device: check responsive layout, touch interactions, and navigation menu. Report any layout issues or hard-to-tap buttons."
 ```
 
@@ -151,10 +151,10 @@ npx @runhuman/cli test https://myapp.com \
 
 ```bash
 # Multiple tests for different browsers
-npx @runhuman/cli test https://myapp.com \
+npx runhuman test https://myapp.com \
   --description "Test in Chrome: full site navigation and checkout flow"
 
-npx @runhuman/cli test https://myapp.com \
+npx runhuman test https://myapp.com \
   --description "Test in Safari: same as Chrome test, note any browser-specific issues"
 ```
 
@@ -162,17 +162,21 @@ npx @runhuman/cli test https://myapp.com \
 
 ## Advanced CLI Usage
 
-### Environment Variables
+### Authentication
 
+**Recommended: Login once**
 ```bash
-# Set API key via environment variable
+# Login and save API key (interactive prompt)
+npx runhuman login
+
+# Then run tests without specifying key
+npx runhuman test https://example.com
+```
+
+**Alternative: Environment variable (for CI/CD)**
+```bash
 export RUNHUMAN_API_KEY=rh_live_abc123
-
-# Use staging API
-export RUNHUMAN_API_URL=https://staging.runhuman.com/api
-
-# Then run tests without --api-key flag
-npx @runhuman/cli test https://example.com
+npx runhuman test https://example.com
 ```
 
 ### Configuration File
@@ -191,13 +195,13 @@ Create `.runhumanrc.json` in your project root:
 
 ```bash
 # JSON output (for scripting)
-npx @runhuman/cli test https://example.com --format json
+npx runhuman test https://example.com --format json
 
 # Pretty console output (default)
-npx @runhuman/cli test https://example.com --format pretty
+npx runhuman test https://example.com --format pretty
 
 # CI/CD output (minimal, exit codes only)
-npx @runhuman/cli test https://example.com --format ci
+npx runhuman test https://example.com --format ci
 ```
 
 ---
@@ -283,7 +287,7 @@ jobs:
 
       - name: Run human QA test
         run: |
-          npx @runhuman/cli test https://pr-${{ github.event.pull_request.number }}.preview.app \
+          npx runhuman test https://pr-${{ github.event.pull_request.number }}.preview.app \
             --description "Test the changes in this PR: ${{ github.event.pull_request.title }}" \
             --wait \
             --api-key ${{ secrets.RUNHUMAN_API_KEY }}
@@ -305,7 +309,7 @@ jobs:
     steps:
       - name: Test critical user flows
         run: |
-          npx @runhuman/cli test https://production.app \
+          npx runhuman test https://production.app \
             --description "Full regression: signup, login, checkout, account settings" \
             --wait \
             --timeout 600000 \  # 10 minutes
@@ -321,15 +325,15 @@ jobs:
 echo "🧪 Running Runhuman Test Suite"
 
 # Test 1: Homepage
-npx @runhuman/cli test https://myapp.com \
+npx runhuman test https://myapp.com \
   --description "Test homepage: hero section, navigation, footer links"
 
 # Test 2: Signup
-npx @runhuman/cli test https://myapp.com/signup \
+npx runhuman test https://myapp.com/signup \
   --description "Test signup: form validation, error messages, success flow"
 
 # Test 3: Mobile
-npx @runhuman/cli test https://myapp.com \
+npx runhuman test https://myapp.com \
   --description "Test on mobile: responsive layout, touch interactions"
 
 echo "✅ All tests submitted. Check dashboard for results."
@@ -381,11 +385,11 @@ Tests cost ~$1-3 per test. Optimize by:
 
 **Solution:**
 ```bash
-# Set API key
-export RUNHUMAN_API_KEY=rh_live_abc123
+# Login once (recommended)
+npx runhuman login
 
-# Or pass inline
-npx @runhuman/cli test https://example.com --api-key rh_live_abc123
+# Or set environment variable
+export RUNHUMAN_API_KEY=rh_live_abc123
 ```
 
 ### Error: "Timeout exceeded"
@@ -393,7 +397,7 @@ npx @runhuman/cli test https://example.com --api-key rh_live_abc123
 **Solution:**
 ```bash
 # Increase timeout for complex flows
-npx @runhuman/cli test https://example.com \
+npx runhuman test https://example.com \
   --timeout 600000 \  # 10 minutes
   --description "Complex multi-step flow"
 ```
@@ -422,19 +426,19 @@ npx @runhuman/cli test https://example.com \
 
 ```bash
 # Basic test
-npx @runhuman/cli test <url>
+npx runhuman test <url>
 
 # Test with description
-npx @runhuman/cli test <url> --description "..."
+npx runhuman test <url> --description "..."
 
 # Synchronous test (wait for result)
-npx @runhuman/cli test <url> --wait
+npx runhuman test <url> --wait
 
 # Check status
-npx @runhuman/cli status <job-id>
+npx runhuman status <job-id>
 
 # List recent tests
-npx @runhuman/cli list
+npx runhuman list
 ```
 
 ### Environment Variables
