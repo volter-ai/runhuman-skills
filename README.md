@@ -108,4 +108,3 @@ MIT
 - **Dashboard:** https://runhuman.com/dashboard
 - **API Documentation:** https://runhuman.com/docs/api
 - **Agent Skills Standard:** https://agentskills.io
-- **Main Repository:** https://github.com/volter-ai/runhuman

@@ -1,248 +1,185 @@
 ---
 name: runhuman-testing
-description: Create and manage human-powered QA tests using Runhuman CLI. Use this skill when you need to test web applications with real human testers, get UX feedback, validate user flows, check mobile responsiveness, or find bugs that automated tests miss. Covers CLI commands, writing effective test descriptions, common workflows (pre-deployment, CI/CD, mobile testing), best practices, and troubleshooting. Ideal for testing signup flows, checkout processes, visual layouts, and exploratory testing.
+description: Create and manage human-powered QA tests using Runhuman CLI. Use when testing web applications, getting UX feedback, validating user flows, checking mobile responsiveness, or finding bugs that automated tests miss. Supports 40+ commands across authentication, jobs, projects, templates, GitHub integration, and more.
 ---
 
-# Runhuman Testing Skills
+# Runhuman Testing
 
-**Version:** 2.0.0
+**Version:** 3.0.0
 **Skills Format:** Agent Skills v1
 **Last Updated:** 2026-02-05
 
 ## Overview
 
-This skill helps AI agents create and manage human-powered QA tests using Runhuman. Runhuman connects AI coding tools to on-demand professional human testers who provide real user feedback.
-
-## Prerequisites
-
-- Node.js 18+ or Bun 1.0.3+
-- Runhuman API key (get one at https://runhuman.com)
-- Basic understanding of QA testing concepts
-
-## Core Concepts
-
-### What is Runhuman?
-
-Runhuman is a human QA testing API. Instead of writing automated tests, you describe what you want tested in natural language, and real human testers perform the test and provide structured feedback.
+Runhuman connects AI agents to on-demand professional human testers for real user feedback. Instead of writing automated tests, describe what you want tested in natural language, and human testers provide structured feedback in 1-2 minutes.
 
 **Key Benefits:**
-- Catch issues automated tests miss (UX problems, visual bugs, mobile responsiveness)
-- Get results in 1-2 minutes average
+- Catch UX issues and visual bugs automated tests miss
+- Get real human perspective on user experience
+- Average response time: 1-2 minutes
 - No test maintenance overhead
-- Real human perspective on user experience
+- Mobile, desktop, tablet, laptop testing
 
-### When to Use Runhuman
-
-✅ **Good Use Cases:**
-- User flows (signup, checkout, onboarding)
-- Visual testing (layout, responsive design, cross-browser)
-- Mobile testing (touch interactions, scrolling, gestures)
-- UX feedback (confusing UI, accessibility issues)
-- Exploratory testing (finding edge cases)
-
-❌ **Not Ideal For:**
-- Unit tests (use Jest/Vitest)
-- Performance testing (use Lighthouse)
-- Security testing (use dedicated security tools)
-- Tests that need to run 100+ times per day (cost prohibitive)
-
----
-
-## CLI Usage (Primary Method)
-
-### Installation
+## Quick Start
 
 ```bash
-# Install CLI globally
-npm install -g runhuman
-
-# Or use npx (no installation)
-npx runhuman create <url> --description "..."
-```
-
-### Authentication
-
-**First-time setup:**
-```bash
-# Login with OAuth (opens browser)
+# One-time setup (authentication + project selection)
 npx runhuman login
+npx runhuman projects list
+npx runhuman projects switch <project-id>
 
-# Or login with API key directly
-npx runhuman login --token qa_live_xxxxxxxxxxxxx
+# Create a test
+npx runhuman create https://example.com \
+  -d "Test signup flow: fill form, check validation, verify success message"
 
-# Verify authentication
-npx runhuman whoami
+# Check results
+npx runhuman status <job-id>
+npx runhuman results <job-id>
+
+# Or wait for completion (blocking mode)
+npx runhuman create https://example.com \
+  -d "Test checkout flow" \
+  --sync
 ```
 
-**For CI/CD (environment variable):**
-```bash
-export RUNHUMAN_API_KEY=qa_live_xxxxxxxxxxxxx
-npx runhuman create https://example.com --description "..."
-```
+## When to Use Runhuman
 
-**API Key Format:** `qa_live_` followed by 40 hex characters
+✅ **Ideal for:**
+- User flows (signup, checkout, onboarding)
+- Visual testing (layout, responsive design)
+- Mobile testing (touch interactions, gestures)
+- UX feedback (confusing UI, accessibility)
+- Exploratory testing (edge cases)
+
+❌ **Not for:**
+- Unit tests → use Jest/Vitest
+- Performance testing → use Lighthouse
+- Security testing → use dedicated tools
+- High-frequency tests (100+/day) → cost prohibitive (~$1-3 per test)
 
 ---
 
-## Project Setup (First-Time Configuration)
+## Command Categories
 
-**IMPORTANT FOR AI AGENTS:** On first use, verify which project to use for CLI operations.
+The CLI has **41 commands** across 8 categories. For complete details, see [references/commands.md](references/commands.md) or use `--help`:
 
-### Initial Setup Workflow
+### 🔐 Authentication
+- `login` - Authenticate via OAuth or API token
+- `logout` - Clear credentials
+- `whoami` - Show user info and account balance
+- `tokens` - View balance and usage history
 
-1. **Check if project is configured:**
-   ```bash
-   npx runhuman config get project
-   ```
+### 📋 Jobs (Test Management)
+- `create` - Create a new test job
+- `status` - Check job status
+- `wait` - Wait for completion (polling)
+- `results` - View detailed test results
+- `list` - List all jobs with filtering
+- `delete` - Delete a job
+- `watch` - Auto-create tests on file changes
 
-2. **If not configured (returns `(not set)`):**
-   - List available projects:
-     ```bash
-     npx runhuman projects list
-     ```
-   - Ask the user: "Which project would you like to use for Runhuman tests?"
-     - Option 1: Use the default project (from login)
-     - Option 2: Specify a project ID from the list
-     - Option 3: Create a new project
+### 📁 Projects
+- `projects list` - List all projects
+- `projects create` - Create new project
+- `projects show` - Show project details
+- `projects switch` - Set default project
+- `projects update` - Update project settings
+- `projects delete` - Delete project
 
-3. **Save the user's choice:**
-   ```bash
-   # Set as default (saved to ~/.config/runhuman/config.json)
-   npx runhuman projects switch <project-id>
-   ```
+### ⚙️ Configuration
+- `config list` - Show all config values
+- `config get` - Get specific value
+- `config set` - Set value (global or project)
+- `config reset` - Reset configuration
 
-4. **On subsequent uses:** The saved project will be used automatically. Don't ask again unless the command fails with a project-related error.
+### 📝 Templates
+- `templates list` - List test templates
+- `templates create` - Create reusable template
+- `templates show` - Show template details
+- `templates update` - Update template
+- `templates delete` - Delete template
 
-### Example: First-Time Setup Dialog
+### 🔑 API Keys
+- `keys list` - List API keys
+- `keys create` - Create new key (for CI/CD)
+- `keys show` - Show key details
+- `keys delete` - Delete key
 
-```
-Agent: "I need to configure which Runhuman project to use. Let me list your projects..."
-[Runs: npx runhuman projects list]
+### 🐙 GitHub Integration
+- `github link` - Link repository to project
+- `github repos` - List linked repos
+- `github issues` - List GitHub issues
+- `github test` - Test a specific issue
+- `github bulk-test` - Test multiple issues
 
-Agent: "You have 3 projects:
-1. Default Project (adfe4b15...)
-2. Production Tests (903d506e...)
-3. Staging Tests (712e42ad...)
+### 🚀 Project Setup
+- `init` - Initialize project with interactive setup
 
-Which project would you like to use for tests? (Enter number or project ID, or 'new' to create one)"
-
-User: "2"
-
-Agent: "Setting Production Tests as your default project..."
-[Runs: npx runhuman projects switch 903d506e...]
-
-Agent: "✓ Project configured. I'll use 'Production Tests' for all Runhuman commands."
-```
-
-### When NOT to Ask
-
-- Don't ask if `npx runhuman config get project` returns a valid project ID
-- Don't ask if the user explicitly passes `--project` in their request
-- Don't ask if a `.runhumanrc` file exists with a project configured
+**For all commands:** `npx runhuman <command> --help`
 
 ---
 
 ## Essential Commands
 
-### 1. Create a Test Job
+### Create a Test
 
-**Basic usage:**
 ```bash
-npx runhuman create https://example.com \
-  --description "Test the checkout flow: add item to cart, proceed to checkout, fill in shipping info. Check for bugs and UX issues."
+npx runhuman create <url> -d "description" [options]
 ```
 
-**Required:**
-- URL (as argument or via `--project` with default URL)
-- Description (via `-d` flag or `--template`)
-- Project ID (via `--project` or set default with `runhuman projects switch`)
-
-**Common options:**
-```bash
-npx runhuman create https://example.com \
-  -d "Test signup form validation" \
-  --project my-project-id \
-  --duration 5 \
-  --screen-size mobile \
-  --sync \
-  --json
-```
-
-**Available options:**
+**Most used options:**
 - `-d, --description <text>` - Test instructions (required)
-- `--project <id>` - Project ID (required, or set default)
-- `--duration <minutes>` - Target duration in minutes (1-60)
-- `--screen-size <preset>` - Screen size: `desktop|laptop|tablet|mobile`
-- `--template <name>` - Use a template
-- `--github-repo <owner/repo>` - Link to GitHub repository
-- `--sync` - Wait for result before exiting (blocks until complete)
-- `--wait <seconds>` - Max wait time when using `--sync` (default: 300)
+- `--screen-size <size>` - desktop|laptop|tablet|mobile
+- `--sync` - Wait for completion (blocking/CI mode)
+- `--project <id>` - Override default project
+- `--duration <min>` - Target duration (1-60 minutes)
+
+**Advanced options:**
+- `--schema <file>` - JSON schema for structured output
+- `--template <name>` - Use template configuration
+- `--github-repo <owner/repo>` - Link to GitHub repo
+- `--create-issues` - Auto-create GitHub issues from findings
 - `--json` - Output as JSON
-- `--quiet` - Minimal output (only job ID)
+- `--quiet` - Minimal output (job ID only)
 
-**Exit codes:**
-- 0 = Success
-- 1 = General error
-- 2 = Authentication failed
-- 4 = Validation error (missing required fields)
-
----
-
-### 2. Check Job Status
+**Examples:**
 
 ```bash
+# Basic test
+npx runhuman create https://myapp.com \
+  -d "Test signup: fill form, verify email confirmation"
+
+# Mobile test
+npx runhuman create https://myapp.com \
+  -d "Test mobile navigation and layout" \
+  --screen-size mobile
+
+# CI/CD blocking test
+npx runhuman create https://staging.app.com \
+  -d "Test checkout flow end-to-end" \
+  --sync --wait 600
+```
+
+### Check Status & Results
+
+```bash
+# Quick status check
 npx runhuman status <job-id>
-```
 
-**Output includes:**
-- Current status (pending, claimed, in_progress, completed, etc.)
-- Tester name (if claimed)
-- URL being tested
-- Duration and cost
-- Dashboard URL
-
----
-
-### 3. Wait for Completion
-
-```bash
+# Wait for completion (polling)
 npx runhuman wait <job-id> --timeout 600
-```
 
-**What it does:**
-- Polls every 10 seconds
-- Shows spinner with elapsed time
-- Exits when job reaches terminal state (completed, error, etc.)
-- Displays results summary on completion
-
-**Exit codes:**
-- 0 = Completed successfully
-- 5 = Timeout exceeded
-
----
-
-### 4. View Results
-
-```bash
+# View detailed results
 npx runhuman results <job-id>
+
+# Get structured data only
+npx runhuman results <job-id> --schema-only --json
 ```
 
-**Options:**
-- `--schema-only` - Show only extracted structured data
-- `--raw` - Show raw tester response
-- `--json` - Output as JSON
-
-**Output sections:**
-1. Job information (ID, status, URL, timestamps, cost)
-2. Structured results (if schema provided)
-3. Tester feedback (natural language findings)
-
----
-
-### 5. List Jobs
+### List Jobs
 
 ```bash
-# List all jobs
+# List all recent jobs
 npx runhuman list
 
 # Filter by status
@@ -250,49 +187,47 @@ npx runhuman list completed
 npx runhuman list pending
 
 # Filter by project
-npx runhuman list --project my-project-id --limit 10
+npx runhuman list --project <id> --limit 10
 ```
-
-**Status filters:** `all|pending|claimed|in_progress|completed|failed|timeout`
-
-**Options:**
-- `--project <id>` - Filter by project
-- `--limit <number>` - Number of results (default: 20)
-- `--offset <number>` - Pagination offset
-- `--format <type>` - Output format: `table|json|compact`
 
 ---
 
-## Project Management
+## First-Time Project Setup
 
-Runhuman uses **projects** to organize tests. Projects can have default URLs, GitHub repo links, and shared configuration.
+**IMPORTANT:** First-time users must authenticate and configure a project before creating tests.
 
-### Set Default Project
+### Setup Workflow
 
 ```bash
-# List projects
+# Step 1: Authenticate (first-time only)
+npx runhuman login
+
+# Step 2: Check if project is configured
+npx runhuman config get project
+
+# Step 3: If returns "(not set)", list available projects
 npx runhuman projects list
 
-# Set default project (saves to global config)
+# Step 4: Choose and set default project
 npx runhuman projects switch <project-id>
 
-# Create new project
-npx runhuman projects create "My App" \
-  --default-url https://myapp.com \
-  --github-repo owner/repo
+# Step 5: Verify configuration
+npx runhuman config get project
 ```
 
-**Why projects matter:**
-- Required for creating jobs
-- Store default URL and test configuration
-- Link to GitHub repositories
-- Organize tests by application/environment
+**After initial setup:** The saved credentials and project will be used automatically for all future commands.
+
+**When NOT to ask:**
+- User is already authenticated (`whoami` succeeds)
+- Project is already configured (`config get project` returns an ID)
+- User explicitly passes `--project` flag
+- `.runhumanrc` file exists with project configured
 
 ---
 
 ## Configuration
 
-### Config Hierarchy (highest to lowest priority)
+### Configuration Priority (highest to lowest)
 
 1. **CLI flags** - `--api-key`, `--project`, etc.
 2. **Environment variables** - `RUNHUMAN_API_KEY`, `RUNHUMAN_PROJECT`
@@ -300,14 +235,12 @@ npx runhuman projects create "My App" \
 4. **Global config** - `~/.config/runhuman/config.json`
 5. **Defaults**
 
-### Configuration File (`.runhumanrc`)
+### Project Config File
 
-Create in your project root:
+Create `.runhumanrc` in your project root:
 
 ```json
 {
-  "apiKey": "qa_live_xxxxxxxxxxxxx",
-  "apiUrl": "https://runhuman.com",
   "project": "my-project-id",
   "defaultUrl": "https://myapp.com",
   "defaultDuration": 5,
@@ -316,124 +249,83 @@ Create in your project root:
 }
 ```
 
-**Supported fields:**
-- `apiKey` - API key for authentication
-- `apiUrl` - API server URL (default: https://runhuman.com)
-- `project` - Default project ID
-- `defaultUrl` - Default test URL
-- `defaultDuration` - Default test duration in minutes
-- `defaultScreenSize` - Default screen size preset
-- `githubRepo` - Linked GitHub repository
-
 ### Environment Variables
 
 ```bash
 RUNHUMAN_API_KEY=qa_live_xxxxxxxxxxxxx
-RUNHUMAN_API_URL=https://runhuman.com
 RUNHUMAN_PROJECT=my-project-id
 RUNHUMAN_DEFAULT_URL=https://example.com
 RUNHUMAN_DEFAULT_DURATION=5
 RUNHUMAN_DEFAULT_SCREEN_SIZE=desktop
 ```
 
-### Config Commands
+**Useful for CI/CD:**
 
-```bash
-# View all config
-npx runhuman config list
-
-# Get specific value
-npx runhuman config get project
-
-# Set value (project-level)
-npx runhuman config set project my-project-id
-
-# Set value (global)
-npx runhuman config set project my-project-id --global
+```yaml
+env:
+  RUNHUMAN_API_KEY: ${{ secrets.RUNHUMAN_API_KEY }}
+  RUNHUMAN_PROJECT: ${{ vars.RUNHUMAN_PROJECT_ID }}
 ```
 
 ---
 
 ## Common Workflows
 
-### Workflow 1: Pre-Deployment Check
+See [references/workflows.md](references/workflows.md) for detailed examples:
+
+### Pre-Deployment Testing
 
 ```bash
 #!/bin/bash
-# Test critical flows before deploying
-
-echo "Testing staging site before deployment..."
-
-npx runhuman create https://staging.myapp.com \
-  --description "Test user signup: click 'Sign Up', fill form, verify email sent" \
+npx runhuman create https://staging.app.com \
+  -d "Test critical flow: signup, login, checkout" \
   --sync
 
 if [ $? -eq 0 ]; then
-  echo "✅ Tests passed - proceeding with deployment"
   ./deploy.sh
 else
-  echo "❌ Tests failed - deployment aborted"
+  echo "Tests failed - deployment aborted"
   exit 1
 fi
 ```
 
-### Workflow 2: GitHub Actions CI/CD
+### GitHub Actions CI/CD
 
 ```yaml
-name: Pre-Merge QA Test
-
-on:
-  pull_request:
-    types: [opened, synchronize]
-
-jobs:
-  human-qa:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy PR preview
-        run: ./deploy-preview.sh ${{ github.event.pull_request.number }}
-
-      - name: Run human QA test
-        run: |
-          npx runhuman create https://pr-${{ github.event.pull_request.number }}.preview.app \
-            --description "Test the changes in this PR: ${{ github.event.pull_request.title }}" \
-            --sync \
-            --project ${{ vars.RUNHUMAN_PROJECT_ID }} \
-            --api-key ${{ secrets.RUNHUMAN_API_KEY }}
+- name: Run human QA test
+  env:
+    RUNHUMAN_API_KEY: ${{ secrets.RUNHUMAN_API_KEY }}
+  run: |
+    npx runhuman create https://preview.app.com \
+      -d "Test PR changes: ${{ github.event.pull_request.title }}" \
+      --sync
 ```
 
-### Workflow 3: Mobile Responsiveness Test
+### Mobile Testing
 
 ```bash
-# Test on mobile viewport
 npx runhuman create https://myapp.com \
-  --description "Test on mobile device: check responsive layout, touch interactions, and navigation menu. Report any layout issues or hard-to-tap buttons." \
+  -d "Test mobile: navigation, layout, touch interactions. Report any issues." \
   --screen-size mobile
 ```
 
-### Workflow 4: Manual Testing Script
+### Batch Testing
 
 ```bash
-#!/bin/bash
-# test-suite.sh - Run multiple tests in sequence
-
-echo "🧪 Running Runhuman Test Suite"
-
-# Test 1: Homepage
-npx runhuman create https://myapp.com \
-  --description "Test homepage: hero section, navigation, footer links"
-
-# Test 2: Signup
-npx runhuman create https://myapp.com/signup \
-  --description "Test signup: form validation, error messages, success flow"
-
-# Test 3: Mobile
-npx runhuman create https://myapp.com \
-  --screen-size mobile \
-  --description "Test on mobile: responsive layout, touch interactions"
-
-echo "✅ All tests submitted. Check dashboard for results."
+# Run multiple tests in parallel (faster, cheaper)
+npx runhuman create url1 -d "Test flow 1" &
+npx runhuman create url2 -d "Test flow 2" &
+npx runhuman create url3 -d "Test flow 3" &
+wait
 ```
+
+**More workflows:**
+- File watching for development
+- GitHub issue integration
+- Structured output with JSON schemas
+- Template-based testing
+
+See [references/workflows.md](references/workflows.md) for complete examples.
 
 ---
 
@@ -441,201 +333,199 @@ echo "✅ All tests submitted. Check dashboard for results."
 
 ### ✅ Good Descriptions
 
-**Example 1: Specific Flow**
+**Specific with steps:**
 ```
-Test the checkout process:
-1. Add product to cart
+Test checkout:
+1. Add item to cart
 2. Click "Checkout"
-3. Fill in shipping address
+3. Fill shipping address
 4. Select payment method
-5. Review order
-6. Complete purchase
+5. Complete order
 
-Report: bugs, UX confusions, mobile layout issues
+Report: bugs, UX issues, confusing elements
 ```
 
-**Example 2: Exploratory Testing**
+**Clear objective:**
 ```
-Explore the dashboard as a new user. Try to:
-- Create a project
-- Add team members
-- Navigate all menu items
+Test mobile navigation:
+- Tap hamburger menu
+- Verify all items visible
+- Try each section
+- Check menu closes properly
 
-Report: anything confusing, broken links, visual bugs
-```
-
-**Example 3: Visual Testing**
-```
-Check the homepage on mobile:
-- Does text fit without wrapping awkwardly?
-- Are images properly sized?
-- Can you tap all buttons easily?
-- Does the navigation menu work?
-
-Report: layout issues, hard-to-read text, broken images
+Report: layout issues, hard-to-tap buttons
 ```
 
 ### ❌ Bad Descriptions
 
-**Too Vague:**
-```
-"Test the site" ❌
-Better: "Test the signup flow: click sign up, fill form, check confirmation email"
-```
+- Too vague: "Test the site"
+- Too technical: "Verify JWT expires after 15min"
+- Missing context: "Click the button"
+- No success criteria: "Test checkout"
 
-**Too Technical:**
-```
-"Verify JWT token expiration after 15 minutes of inactivity" ❌
-Better: "Log in, wait 15 minutes without activity, then try to use the app. Check if you're logged out."
-```
-
-**Missing Context:**
-```
-"Click the button" ❌
-Better: "Click the 'Get Started' button in the hero section"
-```
+**Better:** Be specific about what to test and what to report.
 
 ---
 
 ## Best Practices
 
-### 1. Test Description Guidelines
+### When to Use `--sync`
 
-- **Be specific:** Include exact steps or flows
-- **Include context:** What page, what button, what form
-- **Define success:** What should happen vs. what to look for
-- **List concerns:** Bugs? UX? Mobile? Accessibility?
+**✅ Use sync when:**
+- CI/CD pipelines (need to block deployment)
+- Critical pre-release flows
+- Script needs to wait for results
 
-### 2. When to Use `--sync` Flag
+**❌ Don't use sync when:**
+- Running multiple tests (slower)
+- Testing non-critical features
+- Want faster turnaround
 
-**Use `--sync` when:**
-- Running in CI/CD pipelines
-- Need to block deployment
-- Testing critical flows pre-release
+### Test Frequency
 
-**Don't use `--sync` when:**
-- Running many tests in parallel
-- Testing non-blocking features
-- Doing exploratory testing
+- **Per commit:** Critical flows only (signup, checkout)
+- **Per PR:** Flows changed in PR
+- **Nightly:** Full regression suite
+- **Pre-release:** Everything + edge cases
 
-### 3. Frequency Recommendations
+### Cost Optimization
 
-**Per Commit:** Only critical flows (signup, checkout)
-**Per PR:** Moderate (flows changed in PR)
-**Nightly:** Comprehensive (full regression suite)
-**Pre-Release:** Exhaustive (everything)
+Tests cost ~$1-3 each. Optimize by:
 
-### 4. Cost Optimization
+1. **Batch related tests:** "Test signup AND login" (1 test) vs two tests
+2. **Avoid excessive sync:** Only use in CI/CD
+3. **Test staging, not production:** Catch bugs early
+4. **Prioritize critical flows:** Not every page needs daily testing
 
-Tests cost ~$1-3 per test. Optimize by:
-- **Batch related tests:** "Test signup AND login" (1 test) vs. two separate tests
-- **Use `--sync` judiciously:** Only when necessary
-- **Test staging, not production:** Cheaper to catch bugs early
-- **Prioritize critical flows:** Not every page needs daily testing
+### Screen Sizes
+
+- `desktop` - Default, 1920x1080
+- `laptop` - Smaller screens, 1366x768
+- `tablet` - iPad, 768x1024
+- `mobile` - Phone, 375x667
+
+---
+
+## Exit Codes
+
+Use in scripts for conditional logic:
+
+- `0` - Success
+- `1` - General error
+- `2` - Authentication failed (run `login`)
+- `3` - Resource not found
+- `4` - Validation error (missing required fields)
+- `5` - Timeout (increase `--wait`)
+
+```bash
+npx runhuman create url -d "..." --sync
+if [ $? -eq 0 ]; then
+  echo "✅ Test passed"
+else
+  echo "❌ Test failed"
+  exit 1
+fi
+```
 
 ---
 
 ## Troubleshooting
 
-### Error: "Authentication failed"
+See [references/troubleshooting.md](references/troubleshooting.md) for detailed solutions.
 
-**Solution:**
+**Quick fixes:**
+
+| Error | Solution |
+|-------|----------|
+| "Authentication failed" | `npx runhuman login` |
+| "Project ID required" | `npx runhuman projects switch <id>` |
+| "Invalid URL" | Add `https://` protocol |
+| "URL must be public" | Use tunnel (ngrok) for localhost |
+| Test timeout | Increase `--duration` |
+
+**Get help:**
 ```bash
-# Login again
-npx runhuman login
-
-# Or set API key in environment
-export RUNHUMAN_API_KEY=qa_live_xxxxxxxxxxxxx
-
-# Verify
-npx runhuman whoami
+npx runhuman --help
+npx runhuman <command> --help
+npx runhuman whoami          # Verify auth
+npx runhuman config list     # Check config
 ```
-
-### Error: "Project ID is required"
-
-**Solution:**
-```bash
-# Set default project
-npx runhuman projects switch <project-id>
-
-# Or pass explicitly
-npx runhuman create <url> --description "..." --project <project-id>
-```
-
-### Error: "Validation error"
-
-**Causes:**
-- Missing description (use `-d` flag)
-- Missing URL (provide as argument or set `defaultUrl`)
-- Missing project ID (set default or use `--project`)
-
-**Solution:**
-```bash
-# Ensure all required fields are provided
-npx runhuman create https://example.com \
-  -d "Test description" \
-  --project my-project-id
-```
-
-### Error: "Invalid URL"
-
-**Solution:**
-- Ensure URL includes protocol: `https://example.com` not `example.com`
-- Ensure site is publicly accessible (not localhost)
-- For localhost testing, use a tunnel (ngrok, etc.)
 
 ---
 
-## Quick Reference
+## Reference Documentation
 
-### Most Common Commands
+### 📚 Complete Command Reference
+**[references/commands.md](references/commands.md)** - All 41 commands with full options, examples, and details.
+
+**Use this for:**
+- Detailed command syntax
+- All available options and flags
+- Advanced features (schemas, templates, GitHub integration)
+- Configuration files and environment variables
+
+### 🔧 Workflows & Examples
+**[references/workflows.md](references/workflows.md)** - Real-world integration patterns and best practices.
+
+**Includes:**
+- Pre-deployment testing scripts
+- GitHub Actions CI/CD examples
+- Mobile responsiveness testing
+- Batch testing strategies
+- Cost optimization techniques
+- Template usage patterns
+- Structured output with JSON schemas
+
+### 🔍 Troubleshooting Guide
+**[references/troubleshooting.md](references/troubleshooting.md)** - Common errors and solutions.
+
+**Covers:**
+- Authentication issues
+- Project configuration problems
+- Validation errors
+- Job status issues
+- CI/CD troubleshooting
+- Performance problems
+
+---
+
+## CLI Help
+
+**The CLI has comprehensive built-in help via Commander.js:**
 
 ```bash
-# Authentication
-npx runhuman login
-npx runhuman whoami
-
-# Projects
-npx runhuman projects list
-npx runhuman projects switch <project-id>
-
-# Create test (basic)
-npx runhuman create <url> -d "Test description"
-
-# Create test (with options)
-npx runhuman create <url> \
-  -d "Test description" \
-  --screen-size mobile \
-  --sync
-
-# Check status and results
-npx runhuman status <job-id>
-npx runhuman wait <job-id>
-npx runhuman results <job-id>
-
-# List jobs
-npx runhuman list
-npx runhuman list completed --limit 10
+npx runhuman --help              # List all commands
+npx runhuman create --help       # Create command details
+npx runhuman projects --help     # Projects subcommands
+npx runhuman github test --help  # Specific command help
 ```
 
-### Exit Codes
-
-- `0` - Success
-- `1` - General error
-- `2` - Authentication error
-- `3` - Resource not found
-- `4` - Validation error (missing required fields)
-- `5` - Timeout error
+**Always up-to-date:** Use `--help` for the latest options and features.
 
 ---
 
 ## Additional Resources
 
-- **Dashboard:** https://runhuman.com/dashboard
-- **API Docs:** https://runhuman.com/docs/api
-- **GitHub Actions:** https://github.com/marketplace/actions/runhuman-qa-test
-- **CLI README:** https://github.com/volter-ai/runhuman/tree/main/packages/cli
+- **Dashboard:** https://runhuman.com/dashboard - View jobs, results, and analytics
+- **API Docs:** https://runhuman.com/docs/api - REST API reference
+- **GitHub Action:** https://github.com/marketplace/actions/runhuman-qa-test
+
+---
+
+## API Key Format
+
+API keys follow this format: `qa_live_` + 40 hexadecimal characters
+
+**Example:** `qa_live_1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t`
+
+**Get your key:**
+```bash
+npx runhuman login              # OAuth + auto-save
+npx runhuman keys create "Key" # Generate for CI/CD
+```
 
 ---
 
 **End of Skill**
+
+For detailed documentation, see the `references/` directory or use `npx runhuman <command> --help` for always up-to-date information.
