@@ -194,27 +194,31 @@ npx runhuman list --project <id> --limit 10
 
 ## First-Time Project Setup
 
-**IMPORTANT:** Always configure which project to use before creating tests.
+**IMPORTANT:** First-time users must authenticate and configure a project before creating tests.
 
 ### Setup Workflow
 
 ```bash
-# Step 1: Check if project is configured
+# Step 1: Authenticate (first-time only)
+npx runhuman login
+
+# Step 2: Check if project is configured
 npx runhuman config get project
 
-# Step 2: If returns "(not set)", list projects
+# Step 3: If returns "(not set)", list available projects
 npx runhuman projects list
 
-# Step 3: Choose and set default project
+# Step 4: Choose and set default project
 npx runhuman projects switch <project-id>
 
-# Step 4: Verify configuration
+# Step 5: Verify configuration
 npx runhuman config get project
 ```
 
-**After initial setup:** The saved project will be used automatically for all future commands.
+**After initial setup:** The saved credentials and project will be used automatically for all future commands.
 
 **When NOT to ask:**
+- User is already authenticated (`whoami` succeeds)
 - Project is already configured (`config get project` returns an ID)
 - User explicitly passes `--project` flag
 - `.runhumanrc` file exists with project configured
