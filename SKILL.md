@@ -66,7 +66,7 @@ The CLI has **41 commands** across 8 categories. For complete details, see [refe
 ### 🔐 Authentication
 - `login` - Authenticate via OAuth or API token
 - `logout` - Clear credentials
-- `whoami` - Show user info and token balance
+- `whoami` - Show user info and account balance
 - `tokens` - View balance and usage history
 
 ### 📋 Jobs (Test Management)

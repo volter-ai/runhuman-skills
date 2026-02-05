@@ -58,7 +58,7 @@ npx runhuman logout
 
 ### whoami
 
-Display current authenticated user information and token balance.
+Display current authenticated user information and account balance.
 
 ```bash
 npx runhuman whoami
@@ -70,25 +70,25 @@ npx runhuman whoami
 **Output includes:**
 - Username and email
 - Current project
-- Token balance (available credits)
+- Account balance (in dollars)
 - Estimated tests remaining
 
 **Example output:**
 ```
 User: john@example.com
 Project: My App (adfe4b15...)
-Balance: 1000 tokens (~10 tests)
+Balance: $10.00 (~10 tests)
 ```
 
 ---
 
 ### tokens
 
-Manage token balance and view usage history.
+Manage account balance and view usage history.
 
 #### tokens balance
 
-Check your current token balance and estimated tests.
+Check your current account balance and estimated tests.
 
 ```bash
 npx runhuman tokens balance
@@ -98,13 +98,13 @@ npx runhuman tokens balance
 - `--json` - Output as JSON
 
 **Shows:**
-- Current token balance
+- Current balance (in dollars)
 - Estimated number of tests remaining
-- Token conversion rate
+- Cost per test estimate
 
 #### tokens history
 
-View token usage history (transaction log).
+View balance usage history (transaction log).
 
 ```bash
 npx runhuman tokens history [options]
