@@ -84,6 +84,64 @@ npx runhuman create https://example.com --description "..."
 
 ---
 
+## Project Setup (First-Time Configuration)
+
+**IMPORTANT FOR AI AGENTS:** On first use, verify which project to use for CLI operations.
+
+### Initial Setup Workflow
+
+1. **Check if project is configured:**
+   ```bash
+   npx runhuman config get project
+   ```
+
+2. **If not configured (returns `(not set)`):**
+   - List available projects:
+     ```bash
+     npx runhuman projects list
+     ```
+   - Ask the user: "Which project would you like to use for Runhuman tests?"
+     - Option 1: Use the default project (from login)
+     - Option 2: Specify a project ID from the list
+     - Option 3: Create a new project
+
+3. **Save the user's choice:**
+   ```bash
+   # Set as default (saved to ~/.config/runhuman/config.json)
+   npx runhuman projects switch <project-id>
+   ```
+
+4. **On subsequent uses:** The saved project will be used automatically. Don't ask again unless the command fails with a project-related error.
+
+### Example: First-Time Setup Dialog
+
+```
+Agent: "I need to configure which Runhuman project to use. Let me list your projects..."
+[Runs: npx runhuman projects list]
+
+Agent: "You have 3 projects:
+1. Default Project (adfe4b15...)
+2. Production Tests (903d506e...)
+3. Staging Tests (712e42ad...)
+
+Which project would you like to use for tests? (Enter number or project ID, or 'new' to create one)"
+
+User: "2"
+
+Agent: "Setting Production Tests as your default project..."
+[Runs: npx runhuman projects switch 903d506e...]
+
+Agent: "✓ Project configured. I'll use 'Production Tests' for all Runhuman commands."
+```
+
+### When NOT to Ask
+
+- Don't ask if `npx runhuman config get project` returns a valid project ID
+- Don't ask if the user explicitly passes `--project` in their request
+- Don't ask if a `.runhumanrc` file exists with a project configured
+
+---
+
 ## Essential Commands
 
 ### 1. Create a Test Job
