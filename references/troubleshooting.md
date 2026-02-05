@@ -301,7 +301,6 @@ npx runhuman status job_abc123
 
 1. **Wait:** Most jobs are claimed within 1-2 minutes
 2. **Check dashboard:** https://runhuman.com/dashboard
-3. **Contact support** if stuck > 10 minutes
 
 **Normal timing:**
 - Claimed: 30 seconds - 2 minutes
@@ -346,8 +345,6 @@ npx runhuman create <url> -d "Test part 2: profile" --duration 5
    ```bash
    npx runhuman create <url> -d "..."
    ```
-
-4. **Contact support** if issue persists
 
 ---
 
@@ -666,11 +663,7 @@ npx runhuman whoami
    - Check internet connection
    - Try different network
 
-2. **API server issues:**
-   - Check status: https://status.runhuman.com
-   - Contact support if persists
-
-3. **Large project with many jobs:**
+2. **Large project with many jobs:**
    - Use `--limit` flag:
      ```bash
      npx runhuman list --limit 10
@@ -830,12 +823,3 @@ bash -x ./your-script.sh
 2. **Visit the dashboard:**
    - https://runhuman.com/dashboard
    - Check job status and history
-
-3. **Contact support:**
-   - Email: support@runhuman.com
-   - GitHub Issues: https://github.com/volter-ai/runhuman/issues
-   - Include: error message, CLI version, command used
-
-4. **Check status page:**
-   - https://status.runhuman.com
-   - Verify no ongoing incidents

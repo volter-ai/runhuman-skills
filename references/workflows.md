@@ -636,6 +636,4 @@ Quick fixes:
 
 - **Dashboard:** https://runhuman.com/dashboard
 - **API Documentation:** https://runhuman.com/docs/api
-- **CLI Source Code:** https://github.com/volter-ai/runhuman/tree/main/packages/cli
 - **GitHub Action:** https://github.com/marketplace/actions/runhuman-qa-test
-- **Examples Repository:** https://github.com/volter-ai/runhuman-examples

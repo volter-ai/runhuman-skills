@@ -508,8 +508,6 @@ npx runhuman github test --help  # Specific command help
 
 - **Dashboard:** https://runhuman.com/dashboard - View jobs, results, and analytics
 - **API Docs:** https://runhuman.com/docs/api - REST API reference
-- **GitHub Repo:** https://github.com/volter-ai/runhuman - Source code and issues
-- **CLI Source:** https://github.com/volter-ai/runhuman/tree/main/packages/cli
 - **GitHub Action:** https://github.com/marketplace/actions/runhuman-qa-test
 
 ---
