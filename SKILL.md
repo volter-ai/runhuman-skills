@@ -1,5 +1,6 @@
 ---
 name: runhuman-testing
+version: 2.1.0
 description: Create and manage human-powered QA tests using Runhuman CLI. Use this skill when you need to test web applications with real human testers, get UX feedback, validate user flows, check mobile responsiveness, or find bugs that automated tests miss.
 ---
 
@@ -110,6 +111,27 @@ Tips:
 
 ## CI/CD Integration
 
+> **When users ask about CI/CD, GitHub Actions, or automating QA in their pipeline:** Fetch the comprehensive agent guide at `https://runhuman.com/for_agents_github_actions.md` and follow its instructions to walk the user through setup. The guide covers PR-triggered testing, scheduled exploratory QA, on-demand testing, label management, and platform-specific examples (Vercel, Netlify, Fly.io, Railway).
+
+> **Determining the latest action version:** Before writing any workflow file, check the latest release of the GitHub Action by running `gh release list --repo volter-ai/runhuman-action --limit 1` or checking `https://github.com/volter-ai/runhuman-action/releases`. Use the latest version tag rather than hardcoding an outdated version.
+
+**Using the GitHub Action (recommended for CI/CD):**
+
+```yaml
+# .github/workflows/qa.yml
+- name: Run QA tests
+  uses: volter-ai/runhuman-action@v1  # Check latest version first
+  with:
+    url: ${{ env.PREVIEW_URL }}
+    pr-numbers: '[${{ github.event.pull_request.number }}]'
+    api-key: ${{ secrets.RUNHUMAN_API_KEY }}
+    on-success-add-labels: '["qa:passed"]'
+    on-failure-add-labels: '["qa:failed"]'
+    fail-on-failure: true
+```
+
+**Using the CLI in a workflow:**
+
 ```bash
 # Environment variable auth (for CI)
 export RUNHUMAN_API_KEY=rh_live_...
@@ -152,3 +174,4 @@ runhuman github test --help
 - **Website:** https://runhuman.com
 - **Dashboard:** https://runhuman.com/dashboard
 - **GitHub Action:** https://github.com/marketplace/actions/runhuman-qa-test
+- **GitHub Actions Setup Guide (for agents):** https://runhuman.com/for_agents_github_actions.md - Fetch this when users ask about GitHub Actions, CI/CD pipelines, or automating QA.
