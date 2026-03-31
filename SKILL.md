@@ -1,6 +1,6 @@
 ---
 name: runhuman-testing
-version: 2.1.0
+version: 2.2.0
 description: Create and manage human-powered QA tests using Runhuman CLI. Use this skill when you need to test web applications with real human testers, get UX feedback, validate user flows, check mobile responsiveness, or find bugs that automated tests miss.
 ---
 
@@ -23,33 +23,33 @@ npm install -g runhuman
 # 2. Authenticate (opens browser for GitHub OAuth)
 runhuman login
 
-# 3. Initialize project (creates .runhumanrc in current directory)
-runhuman init
+# 3. Set up a project
+#    List existing projects:
+runhuman projects list
+#    Or create a new one:
+runhuman projects create "My App" --organization <orgId> --default-url https://staging.myapp.com --set-default
+#    Switch to an existing project:
+runhuman projects switch <projectId>
 
 # 4. Create a test
 runhuman create https://staging.myapp.com \
   -d "Test the signup flow: click Sign Up, fill the form, verify confirmation page"
 ```
 
-The `init` command walks you through selecting an organization, creating or choosing a project, and setting a default URL. After init, `runhuman create` uses those defaults automatically.
+**Deciding between new vs existing project:** Ask the user whether they want to create a new project or use an existing one. Use `runhuman projects list` to show what exists, then either `projects create` with `--set-default` or `projects switch` to set the active project. `projects switch` sets the default globally (in `~/.config/runhuman/config.json`) by default; pass `--global false` to set it locally for the current directory only.
 
-### Organizations and Projects
+**Setting defaults:** Use `runhuman config set <key> <value>` to set defaults like `project`, `color`, or `apiUrl`. Use `runhuman config list` to see the full configuration hierarchy.
 
-Runhuman is organized around **organizations** (billing/team boundary) and **projects** (group of tests). Most commands accept `--organization <id>` or `--project <id>` flags.
+### Truncated IDs
+
+All commands accept truncated ID prefixes, similar to git short hashes. The CLI resolves the best match automatically:
 
 ```bash
-# List your organizations and get an org ID
-runhuman orgs list
-
-# List projects in an organization
-runhuman orgs projects <organizationId>
-
-# Pass IDs to other commands
-runhuman projects create "My App" --organization <organizationId>
-runhuman create https://myapp.com -d "Test signup" --project <projectId>
+runhuman status 712e           # resolves to full job ID
+runhuman projects switch proj  # resolves to matching project
 ```
 
-After `runhuman init`, the default org and project are saved to `.runhumanrc` so you don't need to pass them every time.
+If multiple IDs match, the CLI asks for more characters. Destructive operations (`delete`, `transfer`) require full IDs.
 
 ### Wait for Results
 
@@ -69,16 +69,185 @@ runhuman wait <jobId>
 runhuman results <jobId>
 ```
 
+## Creating Tests
+
+The `create` command is the primary way to submit tests. At minimum, provide a URL and either a description or a template.
+
+### With a Description
+
+```bash
+runhuman create https://staging.myapp.com \
+  -d "Test the signup flow: click Sign Up, fill the form, verify confirmation page"
+```
+
+### With an Output Schema
+
+Use `--schema` or `--schema-inline` to get structured JSON results back:
+
+```bash
+# Schema from a file
+runhuman create https://staging.myapp.com \
+  -d "Test the search feature" \
+  --schema ./search-schema.json \
+  --sync --json
+
+# Inline schema
+runhuman create https://staging.myapp.com \
+  -d "Test signup and login" \
+  --schema-inline '{"signupWorks":{"type":"boolean"},"loginWorks":{"type":"boolean"},"issues":{"type":"array","items":{"type":"string"}}}' \
+  --sync --json
+```
+
+Example schema file (`search-schema.json`):
+```json
+{
+  "searchWorks": {
+    "type": "boolean",
+    "description": "Does the search return results?"
+  },
+  "resultCount": {
+    "type": "number",
+    "description": "Number of results shown"
+  },
+  "issues": {
+    "type": "array",
+    "description": "List of any bugs or issues found"
+  }
+}
+```
+
+When a job completes with a schema, `runhuman results <jobId> --json` returns the extracted data in `result.data`:
+
+```json
+{
+  "jobId": "job_abc123",
+  "status": "completed",
+  "result": {
+    "passed": true,
+    "explanation": "All tests passed successfully",
+    "data": {
+      "searchWorks": true,
+      "resultCount": 10,
+      "issues": []
+    }
+  },
+  "costUsd": 0.18,
+  "testDurationSeconds": 120
+}
+```
+
+Use `--schema-only` to get just the extracted schema data: `runhuman results <jobId> --schema-only`.
+
+### With a Template
+
+Templates are reusable test configurations. Use `--template` to reference one by name or `--template-file` to point to a local `.md` file:
+
+```bash
+# By name (resolved from repo .runhuman/templates/ → project templates → built-ins)
+runhuman create https://staging.myapp.com --template "Find Bugs"
+
+# By local file path
+runhuman create --template-file .runhuman/templates/smoke-test.md
+```
+
+When using a template, URL and description are optional — they can come from the template itself.
+
+### Device Class
+
+Specify `--device-class desktop` or `--device-class mobile` to control what device the tester uses:
+
+```bash
+runhuman create https://staging.myapp.com -d "Test mobile layout" --device-class mobile
+```
+
+### Async Workflow (Create, Wait, Get Results)
+
+If you don't use `--sync`, create the job first, then wait for it separately:
+
+```bash
+# 1. Create the job (returns immediately)
+JOB_ID=$(runhuman create https://staging.myapp.com -d "Test search" --json | jq -r '.jobId')
+
+# 2. Wait for the tester to complete (blocks with live status updates)
+runhuman wait "$JOB_ID"
+
+# 3. Get the results
+runhuman results "$JOB_ID" --json
+```
+
+`wait` accepts `--timeout <seconds>` (default: 600). Use `--json` on any command when you need structured output for scripting or automation.
+
+## Templates
+
+Templates define what to test, how long to test, and what results to collect. There are three sources, checked in this order:
+
+| Source | Location | How to create |
+|--------|----------|---------------|
+| **Repo templates** | `.runhuman/templates/*.md` in the user's repo | Commit markdown files |
+| **Project templates** | Stored in Runhuman database | `templates create` or dashboard |
+| **Built-in templates** | Bundled with Runhuman | Available automatically |
+
+### Built-in Templates
+
+Three built-in templates cover common QA scenarios:
+
+| Template | What it does |
+|----------|-------------|
+| **Find Bugs** | Test the app and report bugs with severity, steps to reproduce, expected behavior |
+| **Assess UX** | Evaluate usability, visual design, mobile-friendliness, and rate 1-10 |
+| **Give Product Feedback** | Provide honest feedback: first impressions, strengths, weaknesses, suggestions |
+
+### Repo Templates
+
+Repo templates are `.md` files in `.runhuman/templates/` with YAML frontmatter:
+
+```markdown
+---
+name: Smoke Test
+duration: 5
+device_class: desktop
+url: https://staging.example.com
+---
+
+Verify the app loads and core features work:
+
+1. Load the homepage and confirm it renders without errors
+2. Navigate to the login page and verify the form appears
+3. Check that the main navigation links work
+
+## Results
+
+Page loads without errors: [ ]
+Login form is accessible: [ ]
+Navigation works: [ ]
+Issues found: ___
+```
+
+Frontmatter fields (all optional): `name`, `duration` (minutes, 1-60), `device_class` (`desktop`/`mobile`), `url`, `max_extension_minutes`, `extension_count`, `github_repo`.
+
+### Creating Project Templates via CLI
+
+```bash
+runhuman templates create "Search Test" \
+  --project proj_abc123 \
+  -d "Search for 'recursion' and confirm the joke appears" \
+  --schema ./search-test-schema.json
+```
+
+Options: `--duration <minutes>`, `--device-class <class>`, `--schema <path>`.
+
+List templates: `runhuman templates list --project <projectId>`
+
 ## Command Groups
 
-The CLI is organized into these command groups. Run `runhuman <command> --help` for full usage details on any command.
+Run `runhuman <command> --help` for full usage details on any command.
 
 | Group | Commands | Purpose |
 |-------|----------|---------|
 | **Jobs** | `create`, `status`, `wait`, `results`, `list`, `delete`, `watch` | Create and manage QA test jobs |
 | **Auth** | `login`, `logout`, `whoami` | Authentication |
 | **Projects** | `projects list`, `create`, `show`, `switch`, `update`, `delete` | Manage projects |
-| **Organizations** | `orgs list`, `show`, `balance`, `projects` | Manage organizations |
+| **Organizations** | `orgs list`, `show`, `balance`, `projects`, `switch` | Manage organizations |
 | **Templates** | `templates list`, `create`, `show`, `update`, `delete` | Reusable test configurations |
 | **API Keys** | `keys list`, `create`, `show`, `delete` | Manage API keys |
 | **GitHub** | `github link`, `repos`, `issues`, `test`, `bulk-test` | GitHub integration |
