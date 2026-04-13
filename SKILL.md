@@ -223,7 +223,7 @@ Navigation works: [ ]
 Issues found: ___
 ```
 
-Frontmatter fields (all optional): `name`, `duration` (minutes, 1-60), `device_class` (`desktop`/`mobile`), `url`, `max_extension_minutes`, `extension_count`, `github_repo`.
+Frontmatter fields (all optional): `name`, `duration` (minutes, 1-60), `device_class` (`desktop`/`mobile`), `url`, `max_extension_minutes`, `extension_count`, `github_repos` (YAML list of `owner/repo` strings).
 
 ### Creating Project Templates via CLI
 
