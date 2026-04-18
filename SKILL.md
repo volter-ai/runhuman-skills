@@ -98,6 +98,8 @@ runhuman create https://staging.myapp.com \
   --sync --json
 ```
 
+The top-level keys of an output schema are field names; each value is a JSON Schema 7 fragment describing how to extract that field. Arrays must always declare `items` (OpenAI structured outputs requires it — e.g. `{ "type": "array", "items": { "type": "string" } }`).
+
 Example schema file (`search-schema.json`):
 ```json
 {
@@ -111,6 +113,7 @@ Example schema file (`search-schema.json`):
   },
   "issues": {
     "type": "array",
+    "items": { "type": "string" },
     "description": "List of any bugs or issues found"
   }
 }
