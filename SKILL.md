@@ -1,6 +1,6 @@
 ---
 name: runhuman-testing
-version: 2.2.0
+version: 2.3.0
 description: Create and manage human-powered QA tests using Runhuman CLI. Use this skill when you need to test web applications with real human testers, get UX feedback, validate user flows, check mobile responsiveness, or find bugs that automated tests miss.
 ---
 
@@ -158,6 +158,25 @@ Specify `--device-class desktop` or `--device-class mobile` to control what devi
 
 ```bash
 runhuman create https://staging.myapp.com -d "Test mobile layout" --device-class mobile
+```
+
+### Tester Pool Requirements
+
+Filter which testers are eligible for the job. **Max / Enterprise / Enterprise Pro plans only** — on lower plans, the server rejects job creation with an upgrade link. Do not add these flags unless the user has said they're on a qualifying plan or explicitly asked for pool filtering.
+
+| Flag | Values | Match |
+|------|--------|-------|
+| `--required-devices` | comma-separated: `ios`, `android`, `pc`, `mac` | any — tester needs at least one |
+| `--required-languages` | comma-separated: `english`, `spanish` | all — tester must speak every one |
+| `--require-social-videos` | boolean | — |
+| `--require-apk-install` | boolean | — |
+
+So `--required-languages english,spanish` requires a bilingual tester, not either/or.
+
+```bash
+runhuman create https://staging.myapp.com \
+  -d "Test the checkout flow on Android" \
+  --required-devices android
 ```
 
 ### Async Workflow (Create, Wait, Get Results)
