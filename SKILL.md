@@ -1,6 +1,6 @@
 ---
 name: runhuman-testing
-version: 2.3.0
+version: 2.4.0
 description: Create and manage human-powered QA tests using Runhuman CLI. Use this skill when you need to test web applications with real human testers, get UX feedback, validate user flows, check mobile responsiveness, or find bugs that automated tests miss.
 ---
 
@@ -32,7 +32,7 @@ runhuman projects create "My App" --organization <orgId> --default-url https://s
 runhuman projects switch <projectId>
 
 # 4. Create a test
-runhuman create https://staging.myapp.com \
+runhuman job create https://staging.myapp.com \
   -d "Test the signup flow: click Sign Up, fill the form, verify confirmation page"
 ```
 
@@ -40,43 +40,64 @@ runhuman create https://staging.myapp.com \
 
 **Setting defaults:** Use `runhuman config set <key> <value>` to set defaults like `project`, `color`, or `apiUrl`. Use `runhuman config list` to see the full configuration hierarchy.
 
+**Local repo config:** Run `runhuman init` to create a `.runhumanrc` in the current directory with project name, default duration/device class, and one-or-more linked GitHub repos. Pass `--yes` to skip prompts, or `--name`, `--github-repo <owner/repo>`, or `--github-repos <a/b,c/d>` to fill values non-interactively.
+
+## Job Command Namespace
+
+All job commands live under `runhuman job`:
+
+```bash
+runhuman job create   # create a new test
+runhuman job status   # check a job's status
+runhuman job wait     # block until a job completes
+runhuman job results  # view detailed results
+runhuman job list     # list jobs (with filters)
+runhuman job watch    # tail a live job
+runhuman job artifact # download a raw session artifact
+runhuman job share    # toggle public sharing on
+runhuman job unshare  # toggle public sharing off
+runhuman job create-issue  # file an extracted finding as a GitHub issue
+```
+
+> **Deprecated flat shims.** The older flat forms (`runhuman create`, `runhuman status`, `runhuman wait`, `runhuman results`, `runhuman list`, `runhuman watch`) still resolve but emit a one-line deprecation warning and are scheduled for removal. **Always emit `runhuman job <subcommand>` in new scripts** — don't introduce flat-shim invocations.
+
 ### Truncated IDs
 
 All commands accept truncated ID prefixes, similar to git short hashes. The CLI resolves the best match automatically:
 
 ```bash
-runhuman status 712e           # resolves to full job ID
-runhuman projects switch proj  # resolves to matching project
+runhuman job status 712e          # resolves to full job ID
+runhuman projects switch proj     # resolves to matching project
 ```
 
-If multiple IDs match, the CLI asks for more characters. Destructive operations (`delete`, `transfer`) require full IDs.
+If multiple IDs match, the CLI asks for more characters. Destructive operations (`projects delete`, `keys delete`, `projects transfer --to-org`) require full IDs.
 
 ### Wait for Results
 
 ```bash
 # Block until the test completes (useful in CI/CD)
-runhuman create https://staging.myapp.com \
+runhuman job create https://staging.myapp.com \
   -d "Test checkout flow end-to-end" \
   --sync
 
 # Check status of an existing job
-runhuman status <jobId>
+runhuman job status <jobId>
 
 # Wait for a previously-created job to finish
-runhuman wait <jobId>
+runhuman job wait <jobId>
 
 # View detailed results
-runhuman results <jobId>
+runhuman job results <jobId>
 ```
 
 ## Creating Tests
 
-The `create` command is the primary way to submit tests. At minimum, provide a URL and either a description or a template.
+The `job create` command is the primary way to submit tests. At minimum, provide a URL and either a description or a template.
 
 ### With a Description
 
 ```bash
-runhuman create https://staging.myapp.com \
+runhuman job create https://staging.myapp.com \
   -d "Test the signup flow: click Sign Up, fill the form, verify confirmation page"
 ```
 
@@ -86,13 +107,13 @@ Use `--schema` or `--schema-inline` to get structured JSON results back:
 
 ```bash
 # Schema from a file
-runhuman create https://staging.myapp.com \
+runhuman job create https://staging.myapp.com \
   -d "Test the search feature" \
   --schema ./search-schema.json \
   --sync --json
 
 # Inline schema
-runhuman create https://staging.myapp.com \
+runhuman job create https://staging.myapp.com \
   -d "Test signup and login" \
   --schema-inline '{"signupWorks":{"type":"boolean"},"loginWorks":{"type":"boolean"},"issues":{"type":"array","items":{"type":"string"}}}' \
   --sync --json
@@ -116,27 +137,30 @@ Example schema file (`search-schema.json`):
 }
 ```
 
-When a job completes with a schema, `runhuman results <jobId> --json` returns the extracted data in `result.data`:
+When a job completes with a schema, `runhuman job results <jobId> --json` returns the extracted data inside the standard envelope at `data.result.data`:
 
 ```json
 {
-  "jobId": "job_abc123",
-  "status": "completed",
-  "result": {
-    "passed": true,
-    "explanation": "All tests passed successfully",
-    "data": {
-      "searchWorks": true,
-      "resultCount": 10,
-      "issues": []
-    }
-  },
-  "costUsd": 0.18,
-  "testDurationSeconds": 120
+  "success": true,
+  "data": {
+    "jobId": "job_abc123",
+    "status": "completed",
+    "result": {
+      "passed": true,
+      "explanation": "All tests passed successfully",
+      "data": {
+        "searchWorks": true,
+        "resultCount": 10,
+        "issues": []
+      }
+    },
+    "costUsd": 0.18,
+    "testDurationSeconds": 120
+  }
 }
 ```
 
-Use `--schema-only` to get just the extracted schema data: `runhuman results <jobId> --schema-only`.
+Use `--schema-only` to get just the extracted schema data: `runhuman job results <jobId> --schema-only`.
 
 ### With a Template
 
@@ -144,10 +168,10 @@ Templates are reusable test configurations. Use `--template` to reference one by
 
 ```bash
 # By name (resolved from repo .runhuman/templates/ → project templates → built-ins)
-runhuman create https://staging.myapp.com --template "Find Bugs"
+runhuman job create https://staging.myapp.com --template "Find Bugs"
 
 # By local file path
-runhuman create --template-file .runhuman/templates/smoke-test.md
+runhuman job create --template-file .runhuman/templates/smoke-test.md
 ```
 
 When using a template, URL and description are optional — they can come from the template itself.
@@ -157,7 +181,7 @@ When using a template, URL and description are optional — they can come from t
 Specify `--device-class desktop` or `--device-class mobile` to control what device the tester uses:
 
 ```bash
-runhuman create https://staging.myapp.com -d "Test mobile layout" --device-class mobile
+runhuman job create https://staging.myapp.com -d "Test mobile layout" --device-class mobile
 ```
 
 ### Tester Pool Requirements
@@ -174,10 +198,29 @@ Filter which testers are eligible for the job. **Max / Enterprise / Enterprise P
 So `--required-languages english,spanish` requires a bilingual tester, not either/or.
 
 ```bash
-runhuman create https://staging.myapp.com \
+runhuman job create https://staging.myapp.com \
   -d "Test the checkout flow on Android" \
   --required-devices android
 ```
+
+### Multi-Repo Context
+
+A job can be linked to one or more GitHub repos so AI-extracted findings can be filed back as issues. Provide repos in any of three ways:
+
+```bash
+# Single repo (back-compat flag)
+runhuman job create https://staging.myapp.com -d "Test checkout" \
+  --github-repo owner/repo
+
+# Multiple repos, comma-separated
+runhuman job create https://staging.myapp.com -d "Test checkout" \
+  --github-repos "owner/frontend,owner/backend"
+
+# Or inherit from the project / template / .runhumanrc default
+runhuman job create https://staging.myapp.com -d "Test checkout"
+```
+
+Add `--auto-create-github-issues` to have the server file each AI-extracted finding as a GitHub issue automatically once the job completes. Requires at least one linked repo (via the flags above, the template, or the project default).
 
 ### Async Workflow (Create, Wait, Get Results)
 
@@ -185,16 +228,16 @@ If you don't use `--sync`, create the job first, then wait for it separately:
 
 ```bash
 # 1. Create the job (returns immediately)
-JOB_ID=$(runhuman create https://staging.myapp.com -d "Test search" --json | jq -r '.jobId')
+JOB_ID=$(runhuman job create https://staging.myapp.com -d "Test search" --json | jq -r '.data.jobId')
 
 # 2. Wait for the tester to complete (blocks with live status updates)
-runhuman wait "$JOB_ID"
+runhuman job wait "$JOB_ID"
 
 # 3. Get the results
-runhuman results "$JOB_ID" --json
+runhuman job results "$JOB_ID" --json
 ```
 
-`wait` accepts `--timeout <seconds>` (default: 600). Use `--json` on any command when you need structured output for scripting or automation.
+`job wait` accepts `--timeout <seconds>` (default: 600). Use `--json` on any command when you need structured output for scripting or automation. JSON responses use a stable envelope — list payloads sit at `data.items`, single-entity payloads sit at `data` directly.
 
 ## Templates
 
@@ -253,9 +296,159 @@ runhuman templates create "Search Test" \
   --schema ./search-test-schema.json
 ```
 
-Options: `--duration <minutes>`, `--device-class <class>`, `--schema <path>`.
+Options: `--duration <minutes>` (1-60), `--device-class <class>`, `--schema <path>`.
 
 List templates: `runhuman templates list --project <projectId>`
+
+## Job Output: Results, Artifacts, Sharing, Issues
+
+`job results` is the high-level view. For raw access or follow-on actions, four other sub-commands are available:
+
+```bash
+# High-level results view (with optional rich-data flags)
+runhuman job results <jobId>
+runhuman job results <jobId> --transcript --console-logs
+runhuman job results <jobId> --all          # every rich section
+runhuman job results <jobId> --schema-only  # just extracted schema data
+runhuman job results <jobId> --raw          # raw tester response
+
+# Download a single raw artifact (good for piping)
+runhuman job artifact <jobId> transcript
+runhuman job artifact <jobId> console-logs --json | jq '.data.consoleMessages[]'
+# Other types: structured-output, network-requests, conversation, events, key-moments
+
+# Toggle public sharing — `share` prints the public URL
+runhuman job share <jobId>
+runhuman job unshare <jobId>
+
+# File one extracted finding as a GitHub issue
+runhuman job create-issue <jobId> --index 0
+runhuman job create-issue <jobId> --index 0 --repo owner/repo  # override default
+```
+
+Rich-data sections (transcript, logs, network, events, key-moments, conversation) and the corresponding `job artifact` types are paid-tier gated server-side. Ungated requests return a clean "subscription required" error.
+
+`job create-issue` mirrors the dashboard's per-finding "Create Issue" button — it submits the finding unedited. Use the dashboard or `gh issue edit` if you want to tweak title/body afterwards.
+
+## Projects
+
+```bash
+runhuman projects list
+runhuman projects create "My App" --organization <orgId> [--default-url <url>] [--github-repo <owner/repo>] [--github-repos <a/b,c/d>] [--set-default]
+runhuman projects show <projectId>
+runhuman projects update <projectId> [--name <text>] [--default-url <url>] [--github-repo <owner/repo>] [--github-repos <a/b,c/d>]
+runhuman projects switch <projectId>            # `--global false` for current dir only
+runhuman projects transfer <projectId> --to-org <orgId>   # full IDs required
+runhuman projects delete <projectId> --force    # full ID required
+```
+
+`--github-repo` accepts a single `owner/repo`; `--github-repos` accepts a comma-separated list and replaces (rather than appends to) the project's repo set.
+
+## Organizations
+
+```bash
+runhuman orgs list
+runhuman orgs show <orgId>
+runhuman orgs balance <orgId>
+runhuman orgs projects <orgId>
+runhuman orgs switch <orgId>                # `--global` (default) or local
+
+# Membership
+runhuman orgs members <orgId>
+runhuman orgs invite <orgId> <email> --role <admin|contributor|viewer>
+runhuman orgs remove <orgId> <userId>
+
+# Pending invitations
+runhuman orgs invitations list --organization <orgId>
+runhuman orgs invitations revoke <invitationId> --organization <orgId> --yes
+
+# Usage analytics
+runhuman orgs usage                          # current org, last 30 days
+runhuman orgs usage --period 7d              # 7d | 30d | 90d | all
+runhuman orgs usage --year 2026 --month 4    # specific month (year+month)
+runhuman orgs usage --json                   # full response, incl. overTime / byHour / bySource
+```
+
+`orgs invite` defaults to `--role contributor`. Default-org context is used by `invitations list/revoke` and `usage` when `--organization` is omitted.
+
+## Billing
+
+User-scoped reads. Purchase flows and plan changes stay in the web UI — use `billing portal` to get there.
+
+```bash
+runhuman billing balance                # credit balance for primary org (or --organization)
+runhuman billing subscription           # current tier, period, add-ons
+runhuman billing portal                 # one-time URL to the Polar customer portal
+runhuman billing portal --open          # open it in the default browser
+```
+
+## Tester Notes (paid feature)
+
+Notes are a knowledge-base entries shown to testers as additional context. **Requires an active organization subscription** — calls fail cleanly with a subscription-required error otherwise.
+
+```bash
+runhuman notes list                          # everything visible to you
+runhuman notes list --search "checkout" --tags "context,gotcha"
+runhuman notes show <noteId>
+runhuman notes create "Auth context" -b "Use the demo account..." --tags "context"
+runhuman notes create "Auth context" --body-file ./note.md --project <projectId>
+runhuman notes update <noteId> [--title <t>] [--body <text> | --body-file <path>] [--tags <list>] [--public|--internal]
+runhuman notes delete <noteId>               # full ID required
+```
+
+Notes default to internal-only; pass `--public` on `create`/`update` to make them customer-visible. Scope is org by default, or pass `--project` to scope to a single project.
+
+## GitHub Integration
+
+```bash
+runhuman github link <owner/repo> --project <projectId>
+runhuman github repos --organization <orgId> [--search <query>]
+runhuman github issues <owner/repo> [--state open|closed|all] [--labels "bug,needs-qa"]
+runhuman github test <issueNumber> -r <owner/repo> -u <url> [--template <id>] [--sync]
+runhuman github bulk-test -r <owner/repo> -u <url> [--labels <list>] [--state <state>] [--limit <n>]
+
+# Force-refresh a GitHub App installation's repo/permissions list — use after granting
+# the app access to new repos if they don't show up in `github repos` yet.
+runhuman github installation refresh --installation <installationId> --organization <orgId>
+```
+
+## Schedules and Transfers
+
+```bash
+# Recurring scheduled jobs (cron-style)
+runhuman schedules list
+runhuman schedules create / show / update / delete   # see --help for each
+
+# Project transfers (accept/reject/cancel a transfer to/from another org)
+runhuman transfers list
+runhuman transfers accept <transferId>
+runhuman transfers reject <transferId>
+runhuman transfers cancel <transferId>
+```
+
+Run `runhuman schedules --help` and `runhuman transfers --help` for full surfaces.
+
+## Auth, Init, Config
+
+```bash
+# Auth
+runhuman login                    # browser OAuth
+runhuman login --token <apiKey>   # non-interactive
+runhuman logout
+runhuman whoami
+
+# Initialize a local .runhumanrc
+runhuman init
+runhuman init --name "My App" --github-repos "owner/frontend,owner/backend" --yes
+
+# Config
+runhuman config get <key>
+runhuman config set <key> <value> [--global]
+runhuman config list [--show-secrets]
+runhuman config reset --project|--global|--all --force
+```
+
+Config priority: CLI flags > env vars (`RUNHUMAN_API_KEY`, `RUNHUMAN_API_URL`, `RUNHUMAN_PROJECT_ID`, `RUNHUMAN_NO_COLOR`) > `.runhumanrc` (project) > `~/.config/runhuman/config.json` (global) > defaults.
 
 ## Command Groups
 
@@ -263,14 +456,21 @@ Run `runhuman <command> --help` for full usage details on any command.
 
 | Group | Commands | Purpose |
 |-------|----------|---------|
-| **Jobs** | `create`, `status`, `wait`, `results`, `list`, `delete`, `watch` | Create and manage QA test jobs |
+| **Jobs** | `job create`, `status`, `wait`, `results`, `list`, `watch`, `artifact`, `share`, `unshare`, `create-issue` | Create and manage QA test jobs (canonical namespace) |
 | **Auth** | `login`, `logout`, `whoami` | Authentication |
-| **Projects** | `projects list`, `create`, `show`, `switch`, `update`, `delete` | Manage projects |
-| **Organizations** | `orgs list`, `show`, `balance`, `projects`, `switch` | Manage organizations |
+| **Init** | `init` | Bootstrap a `.runhumanrc` in the current directory |
+| **Projects** | `projects list`, `create`, `show`, `update`, `switch`, `transfer`, `delete` | Manage projects |
+| **Organizations** | `orgs list`, `show`, `balance`, `projects`, `switch`, `members`, `invite`, `remove`, `invitations`, `usage` | Manage organizations and membership |
+| **Billing** | `billing balance`, `subscription`, `portal` | User-scoped billing reads |
 | **Templates** | `templates list`, `create`, `show`, `update`, `delete` | Reusable test configurations |
+| **Schedules** | `schedules list`, `create`, `show`, `update`, `delete` | Recurring scheduled jobs |
+| **Transfers** | `transfers list`, `accept`, `reject`, `cancel` | Project transfers between orgs |
 | **API Keys** | `keys list`, `create`, `show`, `delete` | Manage API keys |
-| **GitHub** | `github link`, `repos`, `issues`, `test`, `bulk-test` | GitHub integration |
+| **GitHub** | `github link`, `repos`, `issues`, `test`, `bulk-test`, `installation refresh` | GitHub integration |
+| **Notes** (paid) | `notes list`, `show`, `create`, `update`, `delete` | Tester knowledge-base notes |
 | **Config** | `config get`, `set`, `list`, `reset` | CLI configuration |
+
+> **Reminder:** the flat job shims (`runhuman create`, `status`, `wait`, `results`, `list`, `watch`) are deprecated. Always use the `runhuman job <sub>` form in new scripts.
 
 ## Writing Effective Test Descriptions
 
@@ -325,13 +525,13 @@ Tips:
 export RUNHUMAN_API_KEY=rh_live_...
 
 # Synchronous test that blocks until complete
-runhuman create https://staging.myapp.com \
+runhuman job create https://staging.myapp.com \
   -d "Test signup flow" \
   --sync \
   --wait 300
 ```
 
-All commands support `--json` for machine-readable output.
+All commands support `--json` for machine-readable output. JSON responses use a stable envelope: `{ success, data, pagination?, warnings?, timestamp }` on success; `{ success: false, error: { message, code?, details? }, timestamp }` on failure. List commands put items at `data.items`; single-entity commands put the entity at `data`.
 
 ## Exit Codes
 
@@ -352,9 +552,10 @@ All commands support `--json` for machine-readable output.
 runhuman --help
 
 # Help for any command
-runhuman create --help
+runhuman job create --help
 runhuman projects --help
-runhuman github test --help
+runhuman orgs invite --help
+runhuman github installation refresh --help
 ```
 
 ## Resources

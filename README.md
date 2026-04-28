@@ -23,8 +23,8 @@ Works with any Agent Skills-compatible tool: Claude Code, Cursor, Codex, Cline, 
 `SKILL.md` teaches AI agents how to:
 
 - **Quick start** - Install, authenticate, initialize a project, and create a test
-- **Core workflow** - Create jobs, wait for results, check status
-- **Command reference** - Overview of all 9 command groups with pointers to `--help`
+- **Core workflow** - Create jobs, wait for results, check status (canonical `runhuman job <sub>` namespace)
+- **Command reference** - Overview of every command group with pointers to `--help`
 - **Test descriptions** - Write effective descriptions that get useful results
 - **CI/CD** - Integrate Runhuman into automated pipelines
 
