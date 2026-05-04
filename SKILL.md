@@ -1,6 +1,6 @@
 ---
 name: runhuman-testing
-version: 2.4.0
+version: 2.5.0
 description: Create and manage human-powered QA tests using Runhuman CLI. Use this skill when you need to test web applications with real human testers, get UX feedback, validate user flows, check mobile responsiveness, or find bugs that automated tests miss.
 ---
 
@@ -497,6 +497,8 @@ Tips:
 - State what to look for (bugs, UX issues, visual problems)
 - For mobile testing, mention that explicitly in the description
 
+When the project has a repo connected, extracted issues come back grounded in real code paths (e.g. `apps/web/src/checkout/CartButton.tsx:123`) rather than abstract descriptions — you can act on them directly without first hunting down the relevant file. See the [Code Context docs](https://runhuman.com/docs/code-context).
+
 ## CI/CD Integration
 
 > **When users ask about CI/CD, GitHub Actions, or automating QA in their pipeline:** Fetch the comprehensive agent guide at `https://runhuman.com/for_agents_github_actions.md` and follow its instructions to walk the user through setup. The guide covers PR-triggered testing, scheduled exploratory QA, on-demand testing, label management, and platform-specific examples (Vercel, Netlify, Fly.io, Railway).
@@ -517,6 +519,22 @@ Tips:
     on-failure-add-labels: '["qa:failed"]'
     fail-on-failure: true
 ```
+
+**Code Context for PR-triggered tests:** When the project has a repo connected, pass the four `code-context` inputs together so extracted issues come back with file/symbol-level pointers tied to the PR's actual diff (e.g. `checkout/CartButton.tsx:123 — onClick handler` instead of "button doesn't work"). The agent can then act on findings directly without first locating the relevant code.
+
+```yaml
+- uses: volter-ai/runhuman-action@v1
+  with:
+    url: ${{ env.PREVIEW_URL }}
+    pr-numbers: '[${{ github.event.pull_request.number }}]'
+    api-key: ${{ secrets.RUNHUMAN_API_KEY }}
+    enable-code-context: true
+    commit-sha: ${{ github.event.pull_request.head.sha }}
+    commit-base-sha: ${{ github.event.pull_request.base.sha }}
+    wait-for-code-context: true
+```
+
+See the [Code Context docs](https://runhuman.com/docs/code-context) for what the inputs do and what to expect in extracted issues.
 
 **Using the CLI in a workflow:**
 
