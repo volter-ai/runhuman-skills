@@ -497,7 +497,7 @@ Tips:
 - State what to look for (bugs, UX issues, visual problems)
 - For mobile testing, mention that explicitly in the description
 
-When the project has a repo connected, extracted issues come back grounded in real code paths (e.g. `apps/web/src/checkout/CartButton.tsx:123`) rather than abstract descriptions — you can act on them directly without first hunting down the relevant file. See the [Code Context docs](https://runhuman.com/docs/code-context).
+When the project has a repo connected, Runhuman has learned the codebase and test results come back richer and more detailed — you can act on findings directly. See the [Code Context docs](https://runhuman.com/docs/code-context).
 
 ## CI/CD Integration
 
@@ -520,7 +520,7 @@ When the project has a repo connected, extracted issues come back grounded in re
     fail-on-failure: true
 ```
 
-**Code Context for PR-triggered tests:** When the project has a repo connected, pass the four `code-context` inputs together so extracted issues come back with file/symbol-level pointers tied to the PR's actual diff (e.g. `checkout/CartButton.tsx:123 — onClick handler` instead of "button doesn't work"). The agent can then act on findings directly without first locating the relevant code.
+**Code Context for PR-triggered tests:** When the project has a repo connected, pass the four `code-context` inputs together so test results reflect the code at the head of the PR rather than the default branch.
 
 ```yaml
 - uses: volter-ai/runhuman-action@v1
