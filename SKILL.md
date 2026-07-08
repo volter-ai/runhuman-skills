@@ -193,9 +193,9 @@ Filter which testers are eligible for the job. **Max / Enterprise / Enterprise P
 | `--required-devices` | comma-separated: `ios`, `android`, `pc`, `mac` | any — tester needs at least one |
 | `--required-languages` | comma-separated: `english`, `spanish` | all — tester must speak every one |
 | `--require-social-videos` | boolean | — |
-| `--require-apk-install` | boolean | — |
+| `--require-sideload` | boolean | pair with `--required-devices ios` or `android` |
 
-So `--required-languages english,spanish` requires a bilingual tester, not either/or.
+So `--required-languages english,spanish` requires a bilingual tester, not either/or. `--require-sideload` demands a tester who can sideload mobile apps (Android APK or iOS IPA).
 
 ```bash
 runhuman job create https://staging.myapp.com \
@@ -222,6 +222,41 @@ runhuman job create https://staging.myapp.com -d "Test checkout"
 
 Add `--auto-create-github-issues` to have the server file each AI-extracted finding as a GitHub issue automatically once the job completes. Requires at least one linked repo (via the flags above, the template, or the project default).
 
+### Auto-Filing Findings as Issues
+
+Once a job completes, the server can file AI-extracted findings straight into your tracker. Each tracker has its own opt-in flag, and they can be combined:
+
+| Flag | Effect |
+|------|--------|
+| `--auto-create-github-issues` | File findings as GitHub issues (needs a linked repo) |
+| `--auto-create-github-issues-repo <owner/repo>` | Target a specific repo from the linked set |
+| `--auto-create-github-feedback` | Also file issues from the AI feedback bucket (not just bugs) |
+| `--auto-create-jira-issues` | File findings as Jira issues |
+| `--auto-create-jira-feedback` | Also file Jira issues from the feedback bucket |
+| `--auto-create-linear-issues` | File findings as Linear issues |
+| `--auto-only-tester-surfaced` | Only file findings the tester explicitly surfaced (skip telemetry-only) |
+| `--reopen-on-duplicate` | If a duplicate resolves to a closed issue, reopen it (default: leave it closed) |
+| `--comment-on-duplicate` | If a finding matches an existing issue, post a cross-reference comment instead of a new issue |
+
+Jira and Linear filing require the corresponding integration to be connected for the project; the GitHub flags require at least one linked repo.
+
+### Enhanced Video and Instruction Rewrites
+
+- `--enhanced-video` — in addition to the raw screen recording, render an enhanced video with logo bookends, burned-in captions, and key-moment overlays.
+- `--enhance-instructions` — rewrite the tester instructions using the project Knowledge Base before posting (Enterprise+; the project must have a successful KB run).
+
+### Notifications and Organization Scope
+
+Per-job notification overrides each take `inherit` (default — defers to project, then account settings), `always`, or `never`:
+
+```bash
+runhuman job create https://staging.myapp.com -d "Test checkout" \
+  --email always --in-app never \
+  --email-on-failure always --in-app-on-failure always
+```
+
+Pass `-o, --organization <id>` to scope the job to a specific organization (parity with `job rerun` and the MCP `create_job` tool) when the account belongs to more than one.
+
 ### Async Workflow (Create, Wait, Get Results)
 
 If you don't use `--sync`, create the job first, then wait for it separately:
@@ -238,6 +273,8 @@ runhuman job results "$JOB_ID" --json
 ```
 
 `job wait` accepts `--timeout <seconds>` (default: 600). Use `--json` on any command when you need structured output for scripting or automation. JSON responses use a stable envelope — list payloads sit at `data.items`, single-entity payloads sit at `data` directly.
+
+Both `job status` and `job wait` print a `Recording:` line reporting whether the screen recording is ready to download (`Ready to download`, `Processing`, or omitted when there is no recording) — check it before fetching the recording artifact.
 
 ## Templates
 
